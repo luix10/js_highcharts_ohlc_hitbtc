@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dados para OHLC BTC USDT</title>
+  <style>
+    #chart {
+    height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <div id="chart"></div>
+
+  <script>
+    function obterDadosHitBTC() {
+      /***
+        Acessa dados de candles BTCUSDT da HITBTC através de um proxy
+        exemplo de json retornado:
+        [
+            {
+                "timestamp": "2023-05-29T19:00:00.000Z",
+                "open": "27636.07",
+                "close": "27631.86",
+                "min": "27629.15",
+                "max": "27696.61",
+                "volume": "78.84203",
+                "volume_quote": "2181260.2358310"
+            },
+            ...
+      ***/
+
+      return new Promise(function(resolve, reject) {
+        let xhr = new XMLHttpRequest();
+        let url = 'http://localhost:8081/api/3/public/candles/BTCUSDT?period=H1&limit=1000&sort=DESC';
+
+        xhr.open('GET', url, true);
+        xhr.onload = function() {
+          if (xhr.status === 200) {
+            let jsonData = JSON.parse(xhr.responseText);
+
+            resolve(jsonData);
+          } else {
+            reject(new Error('Erro ao obter os dados da HitBTC. Código de status: ' + xhr.status));
+          }
+        };
+        xhr.onerror = function() {
+          reject(new Error('Erro de rede ao obter os dados da HitBTC.'));
+        };
+        xhr.send();
+      });
+    }
+  
+    function ordenarJsonTimestamp(json, sortToAsc = true){
+        return json.sort((a, b) => {
+            const timestampA = new Date(a.timestamp);
+            const timestampB = new Date(b.timestamp);
+      if (sortToAsc)
+                return timestampA - timestampB
+      else
+          return timestampB - timestampA;
+        });
+    }
+  
+    function ajustaTimezoneLocal(json) {
+        const jsonData = json.map(item => {
+          const timestamp = new Date(item.timestamp);
+          const offset = timestamp.getTimezoneOffset(); //captura o timezone local
+          timestamp.setMinutes(timestamp.getMinutes() - offset); // Ajusta para o timezone local
+          //item.timestamp = timestamp.toISOString();
+          item.timestamp = timestamp;
+            
+          return item;
+        });
+    
+      return jsonData;
+    }
+
+    function prepararJsonHITBC(json) {
+      const ohlcData = json.map((obj) => {
+        return [
+          new Date(obj.timestamp).getTime(),
+          parseFloat(obj.open),
+          parseFloat(obj.max),
+          parseFloat(obj.min),
+          parseFloat(obj.close),
+          parseFloat(obj.volume)
+        ];
+      });
+
+      return ohlcData;
+    }
+
+    function prepararDados(json) {
+      const jsonData = json.map((obj) => {
+        return {
+          timestamp: new Date(obj.timestamp).getTime(),
+          open: parseFloat(obj.open),
+          max: parseFloat(obj.max),
+          min: parseFloat(obj.min),
+          close: parseFloat(obj.close),
+          volume: parseFloat(obj.volume)
+        };
+      });
+
+      return jsonData;
+    }
+  
+    // Calcular SMA para o JSON carregado em memória
+    function calcularSMA(jsonData, period) {
+      for (let i = period - 1; i < jsonData.length; i++) {
+        const subset = jsonData.slice(i - period + 1, i + 1);
+        const closePrices = subset.map(obj => parseFloat(obj.close));
+
+        const sma = closePrices.reduce((total, price) => total + price, 0) / period;
+        jsonData[i].sma = sma;
+      }
+    }
+
+    // Calcular EMA para o JSON carregado em memória
+    function calcularEMA(jsonData, period) {
+      for (let i = period - 1; i < jsonData.length; i++) {
+        const subset = jsonData.slice(i - period + 1, i + 1);
+        const closePrices = subset.map(obj => parseFloat(obj.close));
+
+        const emaMultiplier = 2 / (period + 1);
+        let ema = closePrices[0];
+
+        for (let i = 1; i < period; i++) {
+            ema = (closePrices[i] - ema) * emaMultiplier + ema;
+        }
+
+        jsonData[i].ema = ema;
+      }
+    }
+
+    obterDadosHitBTC()
+      .then(function(jsonData) {
+
+        jsonData = ajustaTimezoneLocal(jsonData);
+        jsonData = ordenarJsonTimestamp(jsonData);
+        jsonData = prepararDados(jsonData);
+
+        //console.log(JSON.stringify(jsonData.slice(-3)));
+  
+        calcularSMA(jsonData, 3);
+        calcularEMA(jsonData, 3);
+
+        //console.log(JSON.stringify(jsonData));
+        //console.log(JSON.stringify(jsonData.slice(0,5)));
+        //console.log(JSON.stringify(jsonData.slice(-5)));
+        //console.log(JSON.stringify(jsonData.slice(-3)));
+        console.log(jsonData.slice(-3));
+
+        // const ohlcData = prepararJsonHITBC(jsonData);
+        // console.log(ohlcData);
+      })
+      .catch(function(error) {
+        console.error('Erro ao obter os dados da HitBTC:', error);
+      });
+  </script>
+  
+</body>
+</html>

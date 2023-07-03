@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Gráfico OHLC BTC USDT</title>
+  <script src="https://code.highcharts.com/highcharts.js"></script>
+  <script src="https://code.highcharts.com/modules/stock.js"></script>
+  <script src="https://code.highcharts.com/stock/indicators/indicators.js"></script>
+  <script src="https://code.highcharts.com/stock/indicators/pivot-points.js"></script>
+  <script src="https://code.highcharts.com/stock/indicators/ema.js"></script>
+  <script src="https://code.highcharts.com/stock/indicators/macd.js"></script>
+  <script src="https://code.highcharts.com/stock/indicators/rsi.js"></script>
+
+  <style>
+    #chart {
+	  height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <div id="chart"></div>
+
+  <script>
+    function gerarGrafico() {
+      // Configuração inicial do gráfico
+      let chart = Highcharts.stockChart('chart', {
+        title: {
+          text: 'Gráfico OHLC BTC USDT'
+        },
+        legend: {
+            enabled: true
+        },
+		chart: {
+		  zoomType: 'xy' // ativa o zoom manual
+		},
+		tooltip: {
+		  distance: 25, // distância desejada em pixels da legenda quando passado o mouse
+		},
+        rangeSelector: {
+          buttons: [{
+            type: 'day',
+            count: 1,
+            text: '1d'
+          }, {
+            type: 'day',
+            count: 7,
+            text: '7d'
+          }, {
+            type: 'month',
+            count: 1,
+            text: '1m'
+          }, {
+            type: 'month',
+            count: 3,
+            text: '3m'
+          }, {
+            type: 'month',
+            count: 6,
+            text: '6m'
+          }, {
+            type: 'year',
+            count: 1,
+            text: '1y'
+          }, {
+            type: 'ytd',
+            text: 'YTD'
+          }, {
+            type: 'all',
+            text: 'ALL'
+          }],
+		  
+          selected: 3,
+		  
+		},
+        yAxis: [{
+          labels: {
+            align: 'right',
+            x: -3
+          },
+          title: {
+            text: 'Preço'
+          },
+          height: '80%',
+          lineWidth: 2
+        }],
+		plotOptions: {
+          series: {
+            showInLegend: false
+          },
+          candlestick: {
+            color: 'red',
+            upColor: 'green',
+            lineColor: 'red',
+            upLineColor: 'green',
+            states: {
+              hover: {
+                color: 'red',
+                upColor: 'green',
+                lineColor: 'red',
+                upLineColor: 'green'
+              }
+            }
+          }
+        },
+		
+        yAxis: [{
+            height: '60%'
+        }, {
+            height: '20%',
+            top: '60%'
+        },{
+		    height: '20%',
+			top: '80%'
+		}],
+		
+        series: [{
+          type: 'candlestick',
+          name: 'BTC USDT',
+		  id: 'btcusdt',
+          data: [] // Inicialmente, o gráfico não terá dados
+        }, {
+            yAxis: 1,
+            type: 'rsi',
+            linkedTo: 'btcusdt'
+        }]
+      });
+/*
+      // Adicionar SMA
+      chart.addSeries({
+        linkedTo: 'btcusdt', // Série vinculada (BTC USDT)
+        name: 'SMA 2',
+        type: 'sma',
+        params: {
+          period: 2
+        },
+        marker: {
+          enabled: false // Desabilitar marcadores
+        },		
+        lineWidth: 2, // Largura da linha
+        lineColor: 'blue', // Cor da linha
+        //fillColor: 'rgba(0, 0, 255, 0.1)', // Cor de preenchimento (opcional)
+        //}
+      });
+*/
+      // Adicionar EMA
+      chart.addSeries({
+        linkedTo: 'btcusdt', // Série vinculada (BTC USDT)
+        name: 'EMA 12',
+        type: 'ema',
+        params: {
+		  period: 12
+        },
+		marker: {
+          enabled: false // Desabilitar marcadores
+        },
+        lineWidth: 2, // Largura da linha
+      });
+/*
+      // Adicionar SMA
+      chart.addSeries({
+        linkedTo: 'btcusdt', 
+        name: 'SMA 28',
+        type: 'sma',
+        params: {
+          period: 28
+        },
+		marker: {
+          enabled: false // Desabilitar marcadores
+        },
+        lineWidth: 2, // Largura da linha
+      });
+
+      // Adicionar EMA
+      chart.addSeries({
+        linkedTo: 'btcusdt', // Série vinculada (BTC USDT)
+        name: 'EMA 12',
+        type: 'ema',
+        params: {
+          //period: 7
+		  period: 12
+        },
+		marker: {
+          enabled: false // Desabilitar marcadores
+        },
+        lineWidth: 2, // Largura da linha
+      });
+	  
+
+      // Adicionar EMA
+      chart.addSeries({
+        linkedTo: 'btcusdt', // Série vinculada (BTC USDT)
+        name: 'EMA 26',
+        type: 'ema',
+        params: {
+          //period: 7
+		  period: 26
+        },
+		marker: {
+          enabled: false // Desabilitar marcadores
+        },
+        lineWidth: 2, // Largura da linha
+      });
+
+      // Adicione o indicador MACD usando a função addIndicator()
+      chart.addSeries({
+        linkedTo: 'btcusdt', // Série vinculada (BTC USDT)
+        name: 'MACD',
+        type: 'macd',
+        yAxis: 2, // Usar o eixo Y secundário
+        params: {
+          index: 3,
+          shortPeriod: 12, // Período curto do MACD
+		  period: 26, // Período longo do MACD
+          longPeriod: 26, // Período longo do MACD
+          signalPeriod: 9 // Período de sinal do MACD
+        },
+		
+        styles: {
+          macdLine: {
+            lineWidth: 2, // Espessura da linha MACD
+            // Outras configurações de estilo da linha MACD
+          },
+          signalLine: {
+            lineWidth: 2, // Espessura da linha de sinal
+            // Outras configurações de estilo da linha de sinal
+          },
+          histogram: {
+            // Configurações de estilo do histograma
+          }
+        }
+      });
+*/
+      return chart;
+    }
+
+    function carregarJson(chart, ohlcData) {
+      // Atualiza os dados do gráfico
+      chart.series[0].setData(ohlcData);
+    }
+
+    function obterDadosHitBTC() {
+      return new Promise(function(resolve, reject) {
+        let xhr = new XMLHttpRequest();
+        let url = 'http://localhost:8081/api/3/public/candles/BTCUSDT?period=H1&limit=1000&sort=DESC';
+		
+        xhr.open('GET', url, true);
+        xhr.onload = function() {
+          if (xhr.status === 200) {
+            let jsonData = JSON.parse(xhr.responseText);
+
+            resolve(jsonData);
+          } else {
+            reject(new Error('Erro ao obter os dados da HitBTC. Código de status: ' + xhr.status));
+          }
+        };
+        xhr.onerror = function() {
+          reject(new Error('Erro de rede ao obter os dados da HitBTC.'));
+        };
+        xhr.send();
+      });
+    }
+	
+    function ordenarJsonTimestamp(json, sortToAsc = true){
+        return json.sort((a, b) => {
+            const timestampA = new Date(a.timestamp);
+            const timestampB = new Date(b.timestamp);
+			if (sortToAsc)
+                return timestampA - timestampB
+			else
+			    return timestampB - timestampA;
+        });
+    }
+	
+    function ajustaTimezoneLocal(json) {
+        const jsonData = json.map(item => {
+            const timestamp = new Date(item.timestamp);
+            const offset = timestamp.getTimezoneOffset(); //captura o timezone local
+            timestamp.setMinutes(timestamp.getMinutes() - offset); // Ajusta para o timezone local
+			item.timestamp = timestamp;
+            return item;
+        });
+		
+		return jsonData;
+    }
+
+    function prepararJsonHITBC(json) {
+      const ohlcData = json.map((obj) => {
+        return [
+          new Date(obj.timestamp).getTime(),
+          parseFloat(obj.open),
+          parseFloat(obj.max),
+          parseFloat(obj.min),
+          parseFloat(obj.close),
+          parseFloat(obj.volume)
+        ];
+      });
+
+      return ohlcData;
+    }
+	
+function calcularSMA(jsonData, period) {
+  for (let i = period - 1; i < jsonData.length; i++) {
+    const subset = jsonData.slice(i - period + 1, i + 1);
+    const closePrices = subset.map(obj => parseFloat(obj.close));
+    const sma = closePrices.reduce((total, price) => total + price, 0) / period;
+    jsonData[i].sma = sma;
+  }
+}
+
+function calcularEMA(jsonData, period) {
+  for (let i = period - 1; i < jsonData.length; i++) {
+    const subset = jsonData.slice(i - period + 1, i + 1);
+    const closePrices = subset.map(obj => parseFloat(obj.close));
+
+    const emaMultiplier = 2 / (period + 1);
+    let ema = closePrices[0];
+
+    for (let j = 1; j < period; j++) {
+      ema = (closePrices[j] - ema) * emaMultiplier + ema;
+    }
+	
+	console.log(ema);
+
+    //jsonData[i].ema = ema;
+	jsonData[i].ema = '****';
+	
+	return ema;
+  }
+}
+
+function calcularRSI(jsonData, period) {
+  for (let i = period; i < jsonData.length; i++) {
+    let gains = 0;
+    let losses = 0;
+
+    for (let j = i - period + 1; j <= i; j++) {
+      const diff = jsonData[j].close - jsonData[j - 1].close;
+      if (diff > 0) {
+        gains += diff;
+      } else {
+        losses += Math.abs(diff);
+      }
+    }
+
+    const avgGain = gains / period;
+    const avgLoss = losses / period;
+    const rs = avgGain / avgLoss;
+    const rsi = 100 - (100 / (1 + rs));
+
+    jsonData[i].rsi = rsi;
+  }
+}
+
+function calcularStochastic(jsonData, period) {
+  for (let i = period; i < jsonData.length; i++) {
+    const subset = jsonData.slice(i - period + 1, i + 1);
+    const highPrices = subset.map(obj => parseFloat(obj.max));
+    const lowPrices = subset.map(obj => parseFloat(obj.min));
+    const closePrices = subset.map(obj => parseFloat(obj.close));
+
+    const latestHigh = highPrices[highPrices.length - 1];
+    const latestLow = lowPrices[lowPrices.length - 1];
+
+    const highestHigh = Math.max(...highPrices);
+    const lowestLow = Math.min(...lowPrices);
+
+    const k = ((latestHigh - lowestLow) / (highestHigh - lowestLow)) * 100;
+
+    if (!isNaN(k)) {
+      jsonData[i].stochastic = k;
+    }
+  }
+}
+
+function calcularMACD(jsonData, shortPeriod, longPeriod, signalPeriod) {
+  for (let i = longPeriod - 1; i < jsonData.length; i++) {
+    const shortEMA = calcularEMA(jsonData.slice(i - shortPeriod + 1, i + 1), shortPeriod);
+    const longEMA = calcularEMA(jsonData.slice(i - longPeriod + 1, i + 1), longPeriod);
+	
+    const macdLine = shortEMA - longEMA;
+    const macdSignal = calcularEMA(jsonData.slice(i - signalPeriod + 1, i + 1), signalPeriod);
+    const macdDiff = macdLine - macdSignal;
+	
+	jsonData[i].macd = {};
+    jsonData[i].macd.macLine = macdLine;
+	jsonData[i].macd.signal = macdSignal;
+    jsonData[i].macd.diff = macdDiff;
+    jsonData[i].macd.long = longEMA;
+    jsonData[i].macd.short = shortEMA;
+    jsonData[i].macd.histogram = macdDiff * 2; // Multiplica por 2 para ajustar a escala do histograma
+  }
+}
+
+function calcularIndicadores(jsonData) {
+  const period = 14; // Período padrão para os indicadores (pode ser ajustado conforme necessário)
+
+  //calcularSMA(jsonData, 2);
+  calcularEMA(jsonData, 12);
+/*  
+  calcularEMA(jsonData, period);
+  calcularRSI(jsonData, period);
+  calcularStochastic(jsonData, period);
+  calcularMACD(jsonData, 12, 26, 9);
+*/
+}
+
+
+    // Chamada da função gerarGrafico
+    const chart = gerarGrafico();
+
+    obterDadosHitBTC()
+      .then(function(jsonData) {
+	  
+		jsonData = ajustaTimezoneLocal(jsonData);
+        jsonData = ordenarJsonTimestamp(jsonData);
+		
+		//console.log(JSON.stringify(jsonData));
+	
+		calcularIndicadores(jsonData);
+        
+		//console.log(JSON.stringify(jsonData.slice(0,5)));
+		//console.log(JSON.stringify(jsonData.slice(-5)));
+		//console.log(JSON.stringify(jsonData.slice(-1)));
+		console.log(jsonData.slice(-2));
+		console.log('****');
+		
+        const ohlcData = prepararJsonHITBC(jsonData);
+		
+        carregarJson(chart, ohlcData);
+      })
+      .catch(function(error) {
+        console.error('Erro ao obter os dados da HitBTC:', error);
+      });
+
+  </script>
+  
+</body>
+</html>
